@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Acly — Prospect Miner</title>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0C0C10; --bg2: #13131A; --bg3: #1A1A24;
+    --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.14);
+    --text: #F0EFE8; --text2: rgba(240,239,232,0.55); --text3: rgba(240,239,232,0.3);
+    --green: #1D9E75; --green-bg: rgba(29,158,117,0.12);
+    --amber: #EF9F27; --amber-bg: rgba(239,159,39,0.12);
+    --red: #E24B4A; --red-bg: rgba(226,75,74,0.1);
+    --accent: #F97316;
+  }
+  body { font-family: 'Figtree', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 28px; border-bottom: 0.5px solid var(--border);
+    background: var(--bg); position: sticky; top: 0; z-index: 100;
+  }
+  .logo { font-size: 17px; font-weight: 600; letter-spacing: -0.02em; }
+  .logo-dot { color: var(--accent); }
+  .topbar-right { font-size: 11px; color: var(--text3); }
+
+  .layout {
+    max-width: 1080px; margin: 0 auto; padding: 28px 20px;
+    display: grid; grid-template-columns: 280px 1fr; gap: 20px; align-items: start;
+  }
+
+  .panel {
+    background: var(--bg2); border: 0.5px solid var(--border);
+    border-radius: 12px; padding: 18px; position: sticky; top: 72px;
+  }
+  .panel-title {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--text3); margin-bottom: 14px;
+  }
+
+  label { display: block; font-size: 11px; color: var(--text2); margin-bottom: 4px; margin-top: 12px; }
+  label:first-of-type { margin-top: 0; }
+  select, input[type=text] {
+    width: 100%; background: var(--bg3); border: 0.5px solid var(--border2);
+    border-radius: 7px; color: var(--text); font-family: 'Figtree', sans-serif;
+    font-size: 12px; padding: 8px 10px; outline: none; -webkit-appearance: none;
+  }
+  select:focus, input:focus { border-color: rgba(255,255,255,0.28); }
+  select option { background: #1A1A24; }
+
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  .divider { height: 0.5px; background: var(--border); margin: 14px 0; }
+
+  .btn-gen {
+    width: 100%; margin-top: 14px; padding: 10px;
+    background: var(--text); color: var(--bg); border: none;
+    border-radius: 8px; font-family: 'Figtree', sans-serif;
+    font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity 0.15s;
+  }
+  .btn-gen:hover { opacity: 0.88; }
+
+  .searches-section { margin-top: 14px; }
+  .search-link {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--bg3); border: 0.5px solid var(--border);
+    border-radius: 7px; padding: 8px 10px; margin-bottom: 6px;
+    text-decoration: none; color: var(--text2); font-size: 11px;
+    transition: all 0.15s; cursor: pointer;
+  }
+  .search-link:hover { border-color: var(--border2); color: var(--text); }
+  .search-label { font-size: 11px; color: var(--text2); }
+  .search-arrow { color: var(--text3); font-size: 13px; }
+
+  .hint {
+    font-size: 11px; color: var(--text3); line-height: 1.7; margin-top: 10px;
+  }
+  .hint strong { color: var(--text2); font-weight: 500; }
+
+  .right-panel { min-height: 500px; }
+
+  .add-form {
+    background: var(--bg2); border: 0.5px solid var(--border);
+    border-radius: 12px; padding: 18px; margin-bottom: 20px;
+  }
+  .add-title { font-size: 13px; font-weight: 600; margin-bottom: 14px; color: var(--text); }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .span2 { grid-column: span 2; }
+
+  input[type=text].field {
+    width: 100%; background: var(--bg3); border: 0.5px solid var(--border2);
+    border-radius: 7px; color: var(--text); font-family: 'Figtree', sans-serif;
+    font-size: 12px; padding: 8px 10px; outline: none;
+  }
+  input[type=text].field:focus { border-color: rgba(255,255,255,0.28); }
+
+  .radio-group { display: flex; gap: 6px; margin-top: 4px; }
+  .radio-btn {
+    flex: 1; padding: 7px; text-align: center; font-size: 11px; font-weight: 500;
+    border-radius: 6px; cursor: pointer; border: 0.5px solid var(--border2);
+    color: var(--text2); background: var(--bg3); transition: all 0.15s;
+  }
+  .radio-btn.apto.selected { background: var(--green-bg); color: var(--green); border-color: rgba(29,158,117,0.3); }
+  .radio-btn.pendiente.selected { background: var(--amber-bg); color: var(--amber); border-color: rgba(239,159,39,0.3); }
+  .radio-btn.descartado.selected { background: var(--red-bg); color: var(--red); border-color: rgba(226,75,74,0.2); }
+
+  .btn-add {
+    margin-top: 14px; padding: 9px 20px;
+    background: var(--green-bg); color: var(--green);
+    border: 0.5px solid rgba(29,158,117,0.3); border-radius: 7px;
+    font-family: 'Figtree', sans-serif; font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: opacity 0.15s;
+  }
+  .btn-add:hover { opacity: 0.8; }
+
+  .summary-row {
+    display: flex; gap: 18px; padding-bottom: 14px;
+    border-bottom: 0.5px solid var(--border); margin-bottom: 14px; flex-wrap: wrap;
+  }
+  .sum-item { font-size: 12px; color: var(--text2); }
+  .sum-item strong { color: var(--text); font-weight: 600; }
+  .sum-item.green strong { color: var(--green); }
+
+  .tabs { display: flex; gap: 4px; margin-bottom: 14px; }
+  .tab {
+    font-size: 11px; padding: 5px 11px; border-radius: 6px; cursor: pointer;
+    color: var(--text2); background: transparent; border: 0.5px solid transparent;
+    transition: all 0.15s; font-family: 'Figtree', sans-serif;
+  }
+  .tab:hover { color: var(--text); background: var(--bg3); }
+  .tab.active { color: var(--text); background: var(--bg3); border-color: var(--border2); }
+
+  .prospect-card {
+    background: var(--bg2); border: 0.5px solid var(--border);
+    border-radius: 10px; padding: 12px 14px; margin-bottom: 8px;
+    transition: border-color 0.15s;
+  }
+  .prospect-card:hover { border-color: var(--border2); }
+  .prospect-card.apto { border-left: 2px solid var(--green); }
+  .prospect-card.descartado { opacity: 0.35; }
+
+  .p-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
+  .p-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .p-city { font-size: 11px; color: var(--text3); }
+  .p-meta { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
+
+  .badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 500; }
+  .badge-rating { background: var(--amber-bg); color: var(--amber); }
+  .badge-reviews { background: var(--bg3); color: var(--text2); }
+  .badge-giro { background: var(--bg3); color: var(--text3); }
+  .badge-apto { background: var(--green-bg); color: var(--green); }
+  .badge-pendiente { background: var(--amber-bg); color: var(--amber); }
+  .badge-descartado { background: var(--red-bg); color: var(--red); }
+
+  .p-links { display: flex; gap: 10px; margin-bottom: 8px; }
+  .p-link {
+    font-size: 10px; color: var(--text3); text-decoration: none;
+    display: flex; align-items: center; gap: 3px; transition: color 0.15s;
+  }
+  .p-link:hover { color: var(--text2); }
+
+  .p-contact { font-size: 11px; color: var(--text2); margin-bottom: 8px; }
+  .p-notes { font-size: 11px; color: var(--text3); font-style: italic; }
+
+  .p-actions { display: flex; gap: 6px; margin-top: 8px; }
+  .btn-sm {
+    font-size: 11px; padding: 4px 10px; border-radius: 5px; cursor: pointer;
+    font-family: 'Figtree', sans-serif; font-weight: 500; transition: opacity 0.15s; border: none;
+  }
+  .btn-sm:hover { opacity: 0.8; }
+  .btn-sm.apto { background: var(--green-bg); color: var(--green); }
+  .btn-sm.pendiente { background: var(--bg3); color: var(--text2); }
+  .btn-sm.descartado { background: var(--red-bg); color: var(--red); }
+  .btn-sm.delete { background: transparent; color: var(--text3); border: 0.5px solid var(--border); }
+
+  .export-row {
+    display: flex; justify-content: flex-end; margin-top: 14px;
+    padding-top: 14px; border-top: 0.5px solid var(--border);
+  }
+  .btn-export {
+    font-size: 11px; padding: 7px 14px; background: transparent;
+    color: var(--text2); border: 0.5px solid var(--border2); border-radius: 7px;
+    cursor: pointer; font-family: 'Figtree', sans-serif; font-weight: 500; transition: all 0.15s;
+  }
+  .btn-export:hover { background: var(--bg3); color: var(--text); }
+
+  .empty-state {
+    text-align: center; padding: 50px 20px; color: var(--text3); font-size: 13px;
+  }
+
+  .step-hint {
+    background: var(--bg3); border: 0.5px solid var(--border);
+    border-radius: 8px; padding: 12px 14px; margin-bottom: 14px;
+  }
+  .step-hint p { font-size: 11px; color: var(--text2); line-height: 1.7; }
+  .step-hint strong { color: var(--text); font-weight: 500; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">acly<span class="logo-dot">.</span>co — Prospect Miner</div>
+  <div class="topbar-right">Herramienta interna</div>
+</div>
+
+<div class="layout">
+
+  <div class="panel">
+    <p class="panel-title">Búsqueda en Maps</p>
+
+    <label>Tipo de negocio</label>
+    <select id="giro">
+      <option value="restaurant">Restaurante / Taquería</option>
+      <option value="barbershop">Barbería / Barber Shop</option>
+      <option value="hair salon">Salón de belleza</option>
+      <option value="coffee shop">Coffee Shop / Café</option>
+      <option value="dentist">Dentista / Dental Office</option>
+      <option value="marketing agency">Agencia de Marketing</option>
+      <option value="small business">Negocio general</option>
+      <option value="clothing store">Tienda de ropa / Portafolio</option>
+    </select>
+
+    <label>Ciudad</label>
+    <select id="ciudad">
+      <option value="Houston, TX">Houston, TX</option>
+      <option value="Dallas, TX">Dallas, TX</option>
+      <option value="Chicago, IL">Chicago, IL</option>
+      <option value="San Antonio, TX">San Antonio, TX</option>
+      <option value="El Paso, TX">El Paso, TX</option>
+      <option value="Los Angeles, CA">Los Angeles, CA</option>
+      <option value="Miami, FL">Miami, FL</option>
+      <option value="Phoenix, AZ">Phoenix, AZ</option>
+      <option value="Orlando, FL">Orlando, FL</option>
+    </select>
+
+    <button class="btn-gen" onclick="generarBusquedas()">Generar búsquedas</button>
+
+    <div class="searches-section" id="searchesSection" style="display:none">
+      <div class="divider"></div>
+      <p class="panel-title">Abrir en Maps</p>
+      <div id="searchLinks"></div>
+      <p class="hint">
+        <strong>Cómo usarlo:</strong> Abre cada búsqueda, revisa los negocios, y registra los aptos abajo. Descarta los que sean cadenas, tengan más de 300 o menos de 15 reseñas, o rating menor a 3.5.
+      </p>
+    </div>
+  </div>
+
+  <div class="right-panel">
+
+    <div class="add-form">
+      <p class="add-title">Registrar prospecto</p>
+
+      <div class="step-hint">
+        <p><strong>Filtros a aplicar al revisar en Maps:</strong> Reseñas entre 15–300 · Rating ≥ 3.5 · Tiene foto del local · No es cadena conocida · Tiene Instagram o email visible</p>
+      </div>
+
+      <div class="form-grid">
+        <div class="span2">
+          <label>Nombre del negocio *</label>
+          <input type="text" class="field" id="f-nombre" placeholder="Ej. Mike's Barbershop">
+        </div>
+        <div>
+          <label>Ciudad</label>
+          <input type="text" class="field" id="f-ciudad" placeholder="Houston, TX">
+        </div>
+        <div>
+          <label>Giro</label>
+          <input type="text" class="field" id="f-giro" placeholder="Barbería">
+        </div>
+        <div>
+          <label>Rating</label>
+          <input type="text" class="field" id="f-rating" placeholder="4.5">
+        </div>
+        <div>
+          <label>Reseñas</label>
+          <input type="text" class="field" id="f-reviews" placeholder="87">
+        </div>
+        <div>
+          <label>Instagram / Email</label>
+          <input type="text" class="field" id="f-contacto" placeholder="@mikes.barbershop">
+        </div>
+        <div>
+          <label>Link Google Maps</label>
+          <input type="text" class="field" id="f-maps" placeholder="maps.google.com/...">
+        </div>
+        <div class="span2">
+          <label>Notas (opcional)</label>
+          <input type="text" class="field" id="f-notas" placeholder="Se ve activo, tiene buen Instagram...">
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <label>Estado</label>
+        <div class="radio-group" id="statusGroup">
+          <div class="radio-btn apto selected" onclick="selectStatus('apto')">✓ Apto</div>
+          <div class="radio-btn pendiente" onclick="selectStatus('pendiente')">— Pendiente</div>
+          <div class="radio-btn descartado" onclick="selectStatus('descartado')">✕ Descartar</div>
+        </div>
+      </div>
+
+      <button class="btn-add" onclick="agregarProspecto()">+ Agregar prospecto</button>
+    </div>
+
+    <div id="listSection" style="display:none">
+      <div class="summary-row" id="summaryRow"></div>
+      <div class="tabs" id="tabsRow"></div>
+      <div id="cardsList"></div>
+      <div class="export-row">
+        <button class="btn-export" onclick="exportarAptos()">↓ Exportar aptos (CSV)</button>
+      </div>
+    </div>
+
+    <div id="emptyState" class="empty-state">
+      Abre una búsqueda en Maps, encuentra un negocio apto<br>y regístralo arriba.
+    </div>
+
+  </div>
+</div>
+
+<script>
+let prospects = JSON.parse(localStorage.getItem('acly_prospects') || '[]');
+let currentStatus = 'apto';
+let currentTab = 'todos';
+
+function selectStatus(s) {
+  currentStatus = s;
+  document.querySelectorAll('.radio-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelector(`.radio-btn.${s}`).classList.add('selected');
+}
+
+function generarBusquedas() {
+  const giro = document.getElementById('giro').value;
+  const ciudad = document.getElementById('ciudad').value;
+  document.getElementById('f-ciudad').value = ciudad;
+  document.getElementById('f-giro').value = document.getElementById('giro').options[document.getElementById('giro').selectedIndex].text;
+
+  const queries = [
+    giro + ' near ' + ciudad,
+    'independent ' + giro + ' ' + ciudad,
+    'local ' + giro + ' ' + ciudad,
+  ];
+
+  const linksEl = document.getElementById('searchLinks');
+  linksEl.innerHTML = queries.map((q, i) => `
+    <a class="search-link" href="https://www.google.com/maps/search/${encodeURIComponent(q)}" target="_blank">
+      <span class="search-label">Búsqueda ${i+1}: "${q}"</span>
+      <span class="search-arrow">↗</span>
+    </a>
+  `).join('');
+
+  document.getElementById('searchesSection').style.display = 'block';
+}
+
+function agregarProspecto() {
+  const nombre = document.getElementById('f-nombre').value.trim();
+  if (!nombre) { alert('El nombre del negocio es obligatorio.'); return; }
+
+  const p = {
+    id: Date.now(),
+    nombre,
+    ciudad: document.getElementById('f-ciudad').value.trim(),
+    giro: document.getElementById('f-giro').value.trim(),
+    rating: document.getElementById('f-rating').value.trim(),
+    reviews: document.getElementById('f-reviews').value.trim(),
+    contacto: document.getElementById('f-contacto').value.trim(),
+    maps: document.getElementById('f-maps').value.trim(),
+    notas: document.getElementById('f-notas').value.trim(),
+    status: currentStatus,
+    fecha: new Date().toLocaleDateString('es-MX')
+  };
+
+  prospects.unshift(p);
+  guardar();
+  limpiarForm();
+  renderAll();
+}
+
+function limpiarForm() {
+  ['f-nombre','f-rating','f-reviews','f-contacto','f-maps','f-notas'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  selectStatus('apto');
+}
+
+function setStatus(id, status) {
+  const p = prospects.find(x => x.id === id);
+  if (p) { p.status = status; guardar(); renderAll(); }
+}
+
+function eliminar(id) {
+  prospects = prospects.filter(x => x.id !== id);
+  guardar();
+  renderAll();
+}
+
+function guardar() {
+  localStorage.setItem('acly_prospects', JSON.stringify(prospects));
+}
+
+function renderAll() {
+  const total = prospects.length;
+  const aptos = prospects.filter(p => p.status === 'apto').length;
+  const pendientes = prospects.filter(p => p.status === 'pendiente').length;
+  const descartados = prospects.filter(p => p.status === 'descartado').length;
+
+  if (total === 0) {
+    document.getElementById('listSection').style.display = 'none';
+    document.getElementById('emptyState').style.display = 'block';
+    return;
+  }
+
+  document.getElementById('listSection').style.display = 'block';
+  document.getElementById('emptyState').style.display = 'none';
+
+  document.getElementById('summaryRow').innerHTML = `
+    <div class="sum-item">Total: <strong>${total}</strong></div>
+    <div class="sum-item green">Aptos: <strong>${aptos}</strong></div>
+    <div class="sum-item">Pendientes: <strong>${pendientes}</strong></div>
+    <div class="sum-item">Descartados: <strong>${descartados}</strong></div>
+  `;
+
+  document.getElementById('tabsRow').innerHTML = `
+    <button class="tab ${currentTab==='todos'?'active':''}" onclick="switchTab('todos')">Todos (${total})</button>
+    <button class="tab ${currentTab==='aptos'?'active':''}" onclick="switchTab('aptos')">Aptos (${aptos})</button>
+    <button class="tab ${currentTab==='pendientes'?'active':''}" onclick="switchTab('pendientes')">Pendientes (${pendientes})</button>
+    <button class="tab ${currentTab==='descartados'?'active':''}" onclick="switchTab('descartados')">Descartados (${descartados})</button>
+  `;
+
+  let filtered = prospects;
+  if (currentTab === 'aptos') filtered = prospects.filter(p => p.status === 'apto');
+  else if (currentTab === 'pendientes') filtered = prospects.filter(p => p.status === 'pendiente');
+  else if (currentTab === 'descartados') filtered = prospects.filter(p => p.status === 'descartado');
+
+  if (filtered.length === 0) {
+    document.getElementById('cardsList').innerHTML = '<div class="empty-state">No hay prospectos en esta categoría.</div>';
+    return;
+  }
+
+  document.getElementById('cardsList').innerHTML = filtered.map(p => `
+    <div class="prospect-card ${p.status}">
+      <div class="p-header">
+        <p class="p-name">${p.nombre}</p>
+        <span class="badge badge-${p.status}">${p.status === 'apto' ? '✓ Apto' : p.status === 'pendiente' ? '— Pendiente' : '✕ Descartado'}</span>
+      </div>
+      <div class="p-meta">
+        ${p.ciudad ? `<span class="badge badge-giro">${p.ciudad}</span>` : ''}
+        ${p.giro ? `<span class="badge badge-giro">${p.giro}</span>` : ''}
+        ${p.rating ? `<span class="badge badge-rating">★ ${p.rating}</span>` : ''}
+        ${p.reviews ? `<span class="badge badge-reviews">${p.reviews} reseñas</span>` : ''}
+      </div>
+      ${p.contacto ? `<p class="p-contact">📬 ${p.contacto}</p>` : ''}
+      ${p.notas ? `<p class="p-notes">"${p.notas}"</p>` : ''}
+      <div class="p-links">
+        ${p.maps ? `<a href="${p.maps}" class="p-link" target="_blank">↗ Google Maps</a>` : ''}
+        ${p.contacto && p.contacto.includes('@') ? `<a href="https://instagram.com/${p.contacto.replace('@','')}" class="p-link" target="_blank">↗ Instagram</a>` : ''}
+      </div>
+      <div class="p-actions">
+        <button class="btn-sm apto" onclick="setStatus(${p.id},'apto')">✓ Apto</button>
+        <button class="btn-sm pendiente" onclick="setStatus(${p.id},'pendiente')">— Pendiente</button>
+        <button class="btn-sm descartado" onclick="setStatus(${p.id},'descartado')">✕ Descartar</button>
+        <button class="btn-sm delete" onclick="eliminar(${p.id})">Eliminar</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  renderAll();
+}
+
+function exportarAptos() {
+  const aptos = prospects.filter(p => p.status === 'apto');
+  if (aptos.length === 0) { alert('No hay prospectos aptos todavía.'); return; }
+  const header = 'Nombre,Ciudad,Giro,Rating,Reseñas,Contacto,Google Maps,Notas,Fecha\n';
+  const rows = aptos.map(p =>
+    `"${p.nombre}","${p.ciudad}","${p.giro}","${p.rating}","${p.reviews}","${p.contacto}","${p.maps}","${p.notas}","${p.fecha}"`
+  ).join('\n');
+  const blob = new Blob(['\ufeff' + header + rows], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'prospectos_aptos_acly.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+renderAll();
+</script>
+</body>
+</html>
